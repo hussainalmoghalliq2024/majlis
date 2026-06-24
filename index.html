@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مجلس الحبايب - لوحة المتابعة</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --surface2:  #1e2530;
+    --border:    #2a3441;
+    --gold:      #c9a84c;
+    --gold-dim:  #8a6f2e;
+    --gold-glow: rgba(201,168,76,0.15);
+    --green:     #2ea44f;
+    --green-bg:  rgba(46,164,79,0.12);
+    --red:       #f85149;
+    --red-bg:    rgba(248,81,73,0.12);
+    --text:      #e6edf3;
+    --muted:     #7d8590;
+    --teal:      #39c5cf;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── Header ─────────────────────────────── */
+  .header {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a1506 100%);
+    border-bottom: 1px solid var(--gold-dim);
+    padding: 28px 32px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 16px;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-icon {
+    width: 52px; height: 52px;
+    background: radial-gradient(circle at 30% 30%, var(--gold), var(--gold-dim));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 0 20px var(--gold-glow);
+    flex-shrink: 0;
+  }
+
+  .header h1 {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+  }
+
+  .header .subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .balance-badge {
+    background: var(--green-bg);
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 10px 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .balance-badge .label { font-size: 11px; color: var(--muted); }
+  .balance-badge .amount { font-size: 22px; font-weight: 700; color: var(--green); direction: ltr; }
+
+  /* ── Tabs ────────────────────────────────── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 16px 32px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 10px 22px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid transparent;
+    border-bottom: none;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--muted);
+    background: transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab:hover { color: var(--text); background: var(--surface2); }
+
+  .tab.active {
+    background: var(--bg);
+    color: var(--gold);
+    border-color: var(--border);
+    border-bottom-color: var(--bg);
+    margin-bottom: -1px;
+  }
+
+  /* ── Main content ────────────────────────── */
+  .main { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Summary cards ───────────────────────── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+
+  .card .card-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .card .card-value { font-size: 24px; font-weight: 700; color: var(--text); direction: ltr; }
+  .card .card-value.gold { color: var(--gold); }
+  .card .card-value.green { color: var(--green); }
+  .card .card-value.red { color: var(--red); }
+  .card .card-value.teal { color: var(--teal); }
+
+  /* ── Member lookup ───────────────────────── */
+  .lookup-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 28px;
+  }
+
+  .lookup-box h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  .lookup-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  select, .filter-btn {
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+
+  select { flex: 1; min-width: 180px; }
+  select:focus { outline: 1px solid var(--gold); border-color: var(--gold); }
+
+  .filter-btn {
+    background: var(--gold-glow);
+    border-color: var(--gold-dim);
+    color: var(--gold);
+    font-weight: 600;
+    padding: 10px 20px;
+    transition: background 0.2s;
+  }
+
+  .filter-btn:hover { background: rgba(201,168,76,0.25); }
+
+  /* ── Member status result ────────────────── */
+  .member-result {
+    margin-top: 20px;
+    display: none;
+  }
+
+  .member-result.show { display: block; }
+
+  .member-name-banner {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .months-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  .month-card {
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid;
+    text-align: center;
+  }
+
+  .month-card.paid {
+    background: var(--green-bg);
+    border-color: var(--green);
+  }
+
+  .month-card.unpaid {
+    background: var(--red-bg);
+    border-color: var(--red);
+  }
+
+  .month-card .m-name { font-size: 13px; font-weight: 600; }
+  .month-card.paid .m-name { color: var(--green); }
+  .month-card.unpaid .m-name { color: var(--red); }
+
+  .month-card .m-amount { font-size: 18px; font-weight: 700; margin: 4px 0; direction: ltr; }
+  .month-card.paid .m-amount { color: var(--text); }
+  .month-card.unpaid .m-amount { color: var(--muted); }
+
+  .month-card .m-status { font-size: 11px; }
+  .month-card.paid .m-status { color: var(--green); }
+  .month-card.unpaid .m-status { color: var(--red); }
+
+  /* ── Full payments table ─────────────────── */
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    overflow-x: auto;
+  }
+
+  table { width: 100%; border-collapse: collapse; min-width: 580px; }
+  thead { background: var(--surface2); }
+  th {
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 11px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .badge.paid { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
+  .badge.unpaid { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+
+  /* ── Month filter pills ──────────────────── */
+  .pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .pill {
+    font-family: 'Tajawal', sans-serif;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .pill:hover, .pill.active {
+    border-color: var(--gold-dim);
+    background: var(--gold-glow);
+    color: var(--gold);
+  }
+
+  /* ── Expenses ────────────────────────────── */
+  .expense-row td:last-child { direction: ltr; text-align: left; }
+
+  .amount-in { color: var(--green); font-weight: 600; }
+  .amount-out { color: var(--red); }
+
+  .running-balance { font-size: 12px; color: var(--muted); }
+
+  /* ── Progress bar ────────────────────────── */
+  .progress-wrap { margin-top: 6px; }
+  .progress-bar {
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  /* ── Month summary ───────────────────────── */
+  .month-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .month-summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+
+  .month-summary-card h4 {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .month-summary-card .ms-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    direction: ltr;
+    margin-bottom: 8px;
+  }
+
+  .ms-meta { font-size: 12px; color: var(--muted); }
+
+  /* ── Responsive ──────────────────────────── */
+  @media (max-width: 640px) {
+    .header { padding: 16px; }
+    .header h1 { font-size: 20px; }
+    .tabs { padding: 12px 16px 0; }
+    .main { padding: 20px 16px; }
+    .balance-badge .amount { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-title">
+    <div class="logo-icon">☕</div>
+    <div>
+      <h1>مجلس الحبايب</h1>
+      <div class="subtitle">لوحة متابعة الاشتراكات والمصروفات</div>
+    </div>
+  </div>
+  <div class="balance-badge">
+    <div class="label">الرصيد المتاح</div>
+    <div class="amount" id="header-balance">—</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('tab-member')">🔍 وضع العضو</button>
+  <button class="tab" onclick="showTab('tab-payments')">📋 كل الاشتراكات</button>
+  <button class="tab" onclick="showTab('tab-expenses')">💰 المصروفات</button>
+
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- TAB 1: MEMBER STATUS                    -->
+<!-- ════════════════════════════════════════ -->
+<div class="main">
+<div id="tab-member" class="panel active">
+
+  <div class="cards" id="summary-cards"></div>
+
+  <div class="lookup-box">
+    <h3>🔍 تحقق من وضع عضو</h3>
+    <div class="lookup-row">
+      <select id="member-select">
+        <option value="">— اختر اسمك —</option>
+      </select>
+      <button class="filter-btn" onclick="showMember()">عرض</button>
+    </div>
+    <div class="member-result" id="member-result">
+      <div class="member-name-banner" id="member-banner"></div>
+      <div class="months-grid" id="member-months"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- TAB 2: ALL PAYMENTS                     -->
+<!-- ════════════════════════════════════════ -->
+<div id="tab-payments" class="panel">
+
+  <div class="section-title">📋 جدول الاشتراكات الشهرية</div>
+
+  <div class="pills" id="month-pills"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الشهر</th>
+          <th>الرقم</th>
+          <th>اسم المشارك</th>
+          <th>المبلغ (ر.س)</th>
+          <th>الحالة</th>
+          <th>تاريخ الدفع</th>
+        </tr>
+      </thead>
+      <tbody id="payments-tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- TAB 3: EXPENSES                         -->
+<!-- ════════════════════════════════════════ -->
+<div id="tab-expenses" class="panel">
+
+  <div class="cards" id="expense-cards"></div>
+
+  <div class="month-summary-grid" id="month-summary-grid"></div>
+
+  <div class="section-title">💸 تفاصيل المصروفات</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الوصف</th>
+          <th>النوع</th>
+          <th>المبلغ (ر.س)</th>
+          <th>الرصيد بعد العملية</th>
+        </tr>
+      </thead>
+      <tbody id="expenses-tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div><!-- /main -->
+
+
+<script>
+// ──────────────────────────────────────────────────────────
+// DATA (converted from Excel serial dates)
+// ──────────────────────────────────────────────────────────
+
+function excelSerial(s) {
+  const n = parseInt(s);
+  if (isNaN(n)) return s;
+  const d = new Date(Date.UTC(1899, 11, 30) + n * 86400000);
+  return d.toLocaleDateString('ar-SA-u-ca-gregory', { day:'numeric', month:'long', year:'numeric' });
+}
+
+const MONTH_MAP = {
+  46023: 'يناير', 46054: 'فبراير', 46082: 'مارس',
+  46113: 'أبريل', 46143: 'مايو',   46174: 'يونيو',
+  46204: 'يوليو', 46235: 'أغسطس', 46266: 'سبتمبر',
+  46296: 'أكتوبر',46327: 'نوفمبر',46357: 'ديسمبر'
+};
+
+const MONTH_ORDER = Object.keys(MONTH_MAP).map(Number);
+
+const payments = [
+  // يناير
+  {month:46023,no:1,name:'حسين المغلق - أبو هادي',   amount:100,paid:true, date:'46023'},
+  {month:46023,no:2,name:'فاضل الموسوي - أبو هاشم',  amount:100,paid:true, date:'46050'},
+  {month:46023,no:3,name:'حسين الشويخ - أبو مرتضى',  amount:100,paid:true, date:'46023'},
+  {month:46023,no:4,name:'أحمد وهب - أبو محمد',       amount:100,paid:true, date:'46035'},
+  {month:46023,no:5,name:'علي أبو حسون - أبو ريماس',  amount:100,paid:true, date:'46049'},
+  {month:46023,no:6,name:'سعد العلي - أبو نايف',      amount:100,paid:true, date:'46023'},
+  {month:46023,no:7,name:'سيد وصفي - أبو مهدي',       amount:100,paid:true, date:'46023'},
+  {month:46023,no:8,name:'حسن المحسن - أبو محمد',     amount:100,paid:true, date:'46053'},
+  {month:46023,no:9,name:'أحمد العبدالله - أبو نور',  amount:100,paid:true, date:'46050'},
+  {month:46023,no:10,name:'حسن الصادق - أبو جود',     amount:100,paid:true, date:'46049'},
+  // فبراير
+  {month:46054,no:1,name:'حسين المغلق - أبو هادي',   amount:50,paid:true, date:'46054'},
+  {month:46054,no:2,name:'فاضل الموسوي - أبو هاشم',  amount:50,paid:true, date:'46050'},
+  {month:46054,no:3,name:'حسين الشويخ - أبو مرتضى',  amount:50,paid:true, date:'46073'},
+  {month:46054,no:4,name:'أحمد وهب - أبو محمد',       amount:50,paid:true, date:'46081'},
+  {month:46054,no:5,name:'علي أبو حسون - أبو ريماس',  amount:50,paid:true, date:'46079'},
+  {month:46054,no:6,name:'سعد العلي - أبو نايف',      amount:50,paid:true, date:'46081'},
+  {month:46054,no:7,name:'سيد وصفي - أبو مهدي',       amount:50,paid:true, date:'46082'},
+  {month:46054,no:8,name:'حسن المحسن - أبو محمد',     amount:50,paid:true, date:'46053'},
+  {month:46054,no:9,name:'أحمد العبدالله - أبو نور',  amount:50,paid:true, date:'46079'},
+  {month:46054,no:10,name:'حسن الصادق - أبو جود',     amount:50,paid:true, date:'46083'},
+  // مارس
+  {month:46082,no:1,name:'حسين المغلق - أبو هادي',   amount:50,paid:true, date:'46082'},
+  {month:46082,no:2,name:'فاضل الموسوي - أبو هاشم',  amount:50,paid:true, date:'46081'},
+  {month:46082,no:3,name:'حسين الشويخ - أبو مرتضى',  amount:50,paid:true, date:'46086'},
+  {month:46082,no:4,name:'أحمد وهب - أبو محمد',       amount:50,paid:true, date:'46113'},
+  {month:46082,no:5,name:'علي أبو حسون - أبو ريماس',  amount:50,paid:true, date:'46110'},
+  {month:46082,no:6,name:'سعد العلي - أبو نايف',      amount:50,paid:true, date:'46138'},
+  {month:46082,no:7,name:'سيد وصفي - أبو مهدي',       amount:50,paid:true, date:'46113'},
+  {month:46082,no:8,name:'حسن المحسن - أبو محمد',     amount:50,paid:true, date:'46053'},
+  {month:46082,no:9,name:'أحمد العبدالله - أبو نور',  amount:50,paid:true, date:'46080'},
+  {month:46082,no:10,name:'حسن الصادق - أبو جود',     amount:50,paid:true, date:'46107'},
+  // أبريل
+  {month:46113,no:1,name:'حسين المغلق - أبو هادي',   amount:50,paid:true, date:'46113'},
+  {month:46113,no:2,name:'فاضل الموسوي - أبو هاشم',  amount:50,paid:true, date:'46140'},
+  {month:46113,no:3,name:'حسين الشويخ - أبو مرتضى',  amount:50,paid:true, date:'46158'},
+  {month:46113,no:4,name:'أحمد وهب - أبو محمد',       amount:50,paid:true, date:'46141'},
+  {month:46113,no:5,name:'علي أبو حسون - أبو ريماس',  amount:50,paid:true, date:'46139'},
+  {month:46113,no:6,name:'سعد العلي - أبو نايف',      amount:50,paid:true, date:'46138'},
+  {month:46113,no:7,name:'سيد وصفي - أبو مهدي',       amount:50,paid:true, date:'46142'},
+  {month:46113,no:8,name:'حسن المحسن - أبو محمد',     amount:50,paid:true, date:'46053'},
+  {month:46113,no:9,name:'أحمد العبدالله - أبو نور',  amount:50,paid:true, date:'46139'},
+  {month:46113,no:10,name:'حسن الصادق - أبو جود',     amount:50,paid:true, date:'46138'},
+  // مايو
+  {month:46143,no:1,name:'حسين المغلق - أبو هادي',   amount:50,paid:true, date:'46143'},
+  {month:46143,no:2,name:'فاضل الموسوي - أبو هاشم',  amount:50,paid:true, date:'46140'},
+  {month:46143,no:3,name:'حسين الشويخ - أبو مرتضى',  amount:50,paid:true, date:'46158'},
+  {month:46143,no:4,name:'أحمد وهب - أبو محمد',       amount:0, paid:false,date:''},
+  {month:46143,no:5,name:'علي أبو حسون - أبو ريماس',  amount:50,paid:true, date:'46174'},
+  {month:46143,no:6,name:'سعد العلي - أبو نايف',      amount:0, paid:false,date:''},
+  {month:46143,no:7,name:'سيد وصفي - أبو مهدي',       amount:50,paid:true, date:'46175'},
+  {month:46143,no:8,name:'حسن المحسن - أبو محمد',     amount:50,paid:true, date:'46053'},
+  {month:46143,no:9,name:'أحمد العبدالله - أبو نور',  amount:0, paid:false,date:''},
+  {month:46143,no:10,name:'حسن الصادق - أبو جود',     amount:50,paid:true, date:'46138'},
+  // يونيو
+  {month:46174,no:1,name:'حسين المغلق - أبو هادي',   amount:50,paid:true, date:'46174'},
+  {month:46174,no:2,name:'فاضل الموسوي - أبو هاشم',  amount:0, paid:false,date:''},
+  {month:46174,no:3,name:'حسين الشويخ - أبو مرتضى',  amount:50,paid:true, date:'46175'},
+  {month:46174,no:4,name:'أحمد وهب - أبو محمد',       amount:0, paid:false,date:''},
+  {month:46174,no:5,name:'علي أبو حسون - أبو ريماس',  amount:0, paid:false,date:''},
+  {month:46174,no:6,name:'سعد العلي - أبو نايف',      amount:0, paid:false,date:''},
+  {month:46174,no:7,name:'سيد وصفي - أبو مهدي',       amount:0, paid:false,date:''},
+  {month:46174,no:8,name:'حسن المحسن - أبو محمد',     amount:0, paid:false,date:''},
+  {month:46174,no:9,name:'أحمد العبدالله - أبو نور',  amount:0, paid:false,date:''},
+  {month:46174,no:10,name:'حسن الصادق - أبو جود',     amount:0, paid:false,date:''},
+  // يوليو - ديسمبر (لم يتم الدفع)
+  ...[46204,46235,46266,46296,46327,46357].flatMap(m =>
+    ['حسين المغلق - أبو هادي','فاضل الموسوي - أبو هاشم','حسين الشويخ - أبو مرتضى',
+     'أحمد وهب - أبو محمد','علي أبو حسون - أبو ريماس','سعد العلي - أبو نايف',
+     'سيد وصفي - أبو مهدي','حسن المحسن - أبو محمد','أحمد العبدالله - أبو نور',
+     'حسن الصادق - أبو جود'].map((name,i) => ({month:m,no:i+1,name,amount:0,paid:false,date:''}))
+  )
+];
+
+const expenses = [
+  {desc:'المتبقي من سنة ٢٠٢٥',amount:-235.79},
+  {desc:'شاي',amount:-55},
+  {desc:'سليكون',amount:-20},
+  {desc:'تعبئة غازات',amount:-140},
+  {desc:'عزبة يناير ٢٠٢٦',amount:1000},
+  {desc:'نت فلكس',amount:-72.63},
+  {desc:'شاي وسكر',amount:-104.4},
+  {desc:'ماي',amount:-145},
+  {desc:'سكر + مواد تنظيف',amount:-33.5},
+  {desc:'اكياس زبالة',amount:-70},
+  {desc:'ولاعة',amount:-1},
+  {desc:'Netflix',amount:-71},
+  {desc:'عزبة فبراير ٢٠٢٦',amount:500},
+  {desc:'كلينكس',amount:-32},
+  {desc:'تصليح المكيف',amount:-100},
+  {desc:'كلينكس',amount:-48.9},
+  {desc:'عزبة مارس ٢٠٢٦',amount:500},
+  {desc:'شاهد',amount:-46.02},
+  {desc:'شاي',amount:-33},
+  {desc:'عزبة أبريل ٢٠٢٦',amount:500},
+  {desc:'تعبئة غازات',amount:-112},
+  {desc:'ماي',amount:-152},
+  {desc:'عزبة مايو ٢٠٢٦',amount:500},
+  {desc:'قهوة',amount:-26},
+  {desc:'اشتراك اي بي تي في',amount:-128},
+  {desc:'شاي الوزة',amount:-62.99},
+  {desc:'سكر داندريل',amount:-18.5},
+  {desc:'عزبة يونيو ٢٠٢٦',amount:500},
+  {desc:'ماي للمجلس',amount:-162},
+  {desc:'كلينكس',amount:-45},
+];
+
+// ──────────────────────────────────────────────────────────
+// COMPUTED TOTALS
+// ──────────────────────────────────────────────────────────
+const totalCollected = payments.filter(p=>p.paid).reduce((s,p)=>s+p.amount,0);
+const totalExpenses  = expenses.filter(e=>e.amount<0).reduce((s,e)=>s+Math.abs(e.amount),0);
+const balance        = expenses.reduce((s,e)=>s+e.amount,0);
+const paidCount      = payments.filter(p=>p.paid).length;
+const totalSlots     = payments.length;
+
+const members = [...new Set(payments.map(p=>p.name))].sort();
+
+// ──────────────────────────────────────────────────────────
+// TAB SWITCH
+// ──────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ──────────────────────────────────────────────────────────
+// RENDER HEADER BALANCE
+// ──────────────────────────────────────────────────────────
+document.getElementById('header-balance').textContent = balance.toLocaleString('ar',{minimumFractionDigits:2}) + ' ر.س';
+
+// ──────────────────────────────────────────────────────────
+// RENDER SUMMARY CARDS
+// ──────────────────────────────────────────────────────────
+function renderSummaryCards() {
+  const pct = Math.round(paidCount/totalSlots*100);
+  document.getElementById('summary-cards').innerHTML = `
+    <div class="card">
+      <div class="card-label">إجمالي المحصّل</div>
+      <div class="card-value gold">${totalCollected.toLocaleString('ar')} ر.س</div>
+      <div class="progress-wrap">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${paidCount} من ${totalSlots} دفعة (${pct}%)</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">إجمالي المصروفات</div>
+      <div class="card-value red">${totalExpenses.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</div>
+    </div>
+    <div class="card">
+      <div class="card-label">الرصيد المتاح</div>
+      <div class="card-value green">${balance.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</div>
+    </div>
+    <div class="card">
+      <div class="card-label">عدد الأعضاء</div>
+      <div class="card-value teal">${members.length}</div>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────
+// RENDER MEMBER SELECT
+// ──────────────────────────────────────────────────────────
+function renderMemberSelect() {
+  const sel = document.getElementById('member-select');
+  members.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    sel.appendChild(o);
+  });
+}
+
+// ──────────────────────────────────────────────────────────
+// SHOW MEMBER RESULT
+// ──────────────────────────────────────────────────────────
+function showMember() {
+  const name = document.getElementById('member-select').value;
+  if (!name) return;
+
+  const memberPays = payments.filter(p => p.name === name);
+  const totalPaid  = memberPays.filter(p=>p.paid).reduce((s,p)=>s+p.amount,0);
+  const pending    = memberPays.filter(p=>!p.paid).length;
+
+  document.getElementById('member-banner').innerHTML =
+    `<span>${name}</span>
+     <span class="badge paid" style="font-size:13px">دفع ${totalPaid} ر.س</span>
+     ${pending>0 ? `<span class="badge unpaid">${pending} شهر متأخر</span>` : ''}`;
+
+  const grid = document.getElementById('member-months');
+  grid.innerHTML = memberPays.map(p => {
+    const mName = MONTH_MAP[p.month] || p.month;
+    const dateStr = p.paid && p.date ? excelSerial(p.date) : '—';
+    return `<div class="month-card ${p.paid?'paid':'unpaid'}">
+      <div class="m-name">${mName}</div>
+      <div class="m-amount">${p.paid ? p.amount+' ر.س' : '—'}</div>
+      <div class="m-status">${p.paid ? '✓ تم الدفع' : '✗ لم يتم الدفع'}</div>
+      ${p.paid && p.date ? `<div style="font-size:10px;color:var(--muted);margin-top:5px">${excelSerial(p.date)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('member-result').classList.add('show');
+}
+
+// ──────────────────────────────────────────────────────────
+// RENDER PAYMENTS TABLE
+// ──────────────────────────────────────────────────────────
+let activeMonthFilter = 'all';
+
+function renderPaymentsTable(filter) {
+  const data = filter === 'all' ? payments : payments.filter(p=>p.month==filter);
+  const tbody = document.getElementById('payments-tbody');
+  tbody.innerHTML = data.map(p => {
+    const mName   = MONTH_MAP[p.month] || p.month;
+    const dateStr = p.paid && p.date ? excelSerial(p.date) : '—';
+    const badge   = p.paid
+      ? '<span class="badge paid">✓ تم الدفع</span>'
+      : '<span class="badge unpaid">✗ لم يتم الدفع</span>';
+    return `<tr>
+      <td>${mName}</td>
+      <td style="color:var(--muted)">${p.no}</td>
+      <td>${p.name}</td>
+      <td style="direction:ltr;text-align:right">${p.paid ? p.amount+' ر.س' : '—'}</td>
+      <td>${badge}</td>
+      <td style="font-size:12px;color:var(--muted)">${dateStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMonthPills() {
+  const pills = document.getElementById('month-pills');
+  let html = `<button class="pill active" onclick="filterMonth('all',this)">الكل</button>`;
+  MONTH_ORDER.forEach(m => {
+    html += `<button class="pill" onclick="filterMonth(${m},this)">${MONTH_MAP[m]}</button>`;
+  });
+  pills.innerHTML = html;
+}
+
+function filterMonth(m, el) {
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderPaymentsTable(m);
+}
+
+// ──────────────────────────────────────────────────────────
+// RENDER EXPENSES
+// ──────────────────────────────────────────────────────────
+function renderExpenses() {
+  // Summary cards
+  const totalIn  = expenses.filter(e=>e.amount>0).reduce((s,e)=>s+e.amount,0);
+  const totalOut = expenses.filter(e=>e.amount<0).reduce((s,e)=>s+Math.abs(e.amount),0);
+  document.getElementById('expense-cards').innerHTML = `
+    <div class="card">
+      <div class="card-label">إجمالي الوارد (عزبة)</div>
+      <div class="card-value green">${totalIn.toLocaleString('ar')} ر.س</div>
+    </div>
+    <div class="card">
+      <div class="card-label">إجمالي الصادر (مصروفات)</div>
+      <div class="card-value red">${totalOut.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</div>
+    </div>
+    <div class="card">
+      <div class="card-label">الرصيد الحالي</div>
+      <div class="card-value gold">${balance.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</div>
+    </div>
+  `;
+
+  // Monthly summary
+  const monthlyIn = {};
+  MONTH_ORDER.forEach(m => { monthlyIn[MONTH_MAP[m]] = 0; });
+  // map month labels from expense descriptions
+  const expMonthMap = {
+    'يناير':'يناير','فبراير':'فبراير','مارس':'مارس','أبريل':'أبريل',
+    'مايو':'مايو','يونيو':'يونيو'
+  };
+
+  // Payments collected per month
+  const collByMonth = {};
+  MONTH_ORDER.forEach(m => {
+    collByMonth[MONTH_MAP[m]] = payments.filter(p=>p.month===m&&p.paid).reduce((s,p)=>s+p.amount,0);
+  });
+
+  document.getElementById('month-summary-grid').innerHTML = Object.entries(collByMonth)
+    .filter(([,v])=>v>0)
+    .map(([mo,collected]) => `
+      <div class="month-summary-card">
+        <h4>${mo}</h4>
+        <div class="ms-amount">${collected} ر.س</div>
+        <div class="ms-meta">محصّل من الأعضاء</div>
+      </div>
+    `).join('');
+
+  // Expenses table with running balance
+  let running = 0;
+  const tbody = document.getElementById('expenses-tbody');
+  tbody.innerHTML = expenses.map(e => {
+    running += e.amount;
+    const isIn = e.amount > 0;
+    const typeLabel = isIn
+      ? '<span class="badge paid">وارد</span>'
+      : '<span class="badge unpaid">مصروف</span>';
+    const amtStr = isIn
+      ? `<span class="amount-in">+${e.amount.toLocaleString('ar',{minimumFractionDigits:2})}</span>`
+      : `<span class="amount-out">${e.amount.toLocaleString('ar',{minimumFractionDigits:2})}</span>`;
+    return `<tr class="expense-row">
+      <td>${e.desc}</td>
+      <td>${typeLabel}</td>
+      <td>${amtStr}</td>
+      <td><span class="running-balance">${running.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────────────────
+renderSummaryCards();
+renderMemberSelect();
+renderMonthPills();
+renderPaymentsTable('all');
+renderExpenses();
+</script>
+</body>
+</html>
