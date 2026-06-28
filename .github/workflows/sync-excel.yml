@@ -1,0 +1,43 @@
+name: Sync Excel from Google Drive
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download file from Google Drive
+        run: |
+          FILE_ID="1S97xNlKybRGfpBKbmmsztzyR3I0NB6jx"
+          FILE_NAME="Habayib_Majlis_Expenses_2026.xlsx"
+          curl -L \
+            "https://drive.google.com/uc?export=download&id=${FILE_ID}&confirm=t" \
+            -o "${FILE_NAME}"
+          FILE_TYPE=$(file --mime-type -b "${FILE_NAME}")
+          echo "File type: ${FILE_TYPE}"
+          if [[ "$FILE_TYPE" == *"html"* ]]; then
+            echo "ERROR: Got HTML — check Google Drive sharing settings"
+            exit 1
+          fi
+          echo "File size: $(wc -c < ${FILE_NAME}) bytes"
+
+      - name: Commit and push to GitHub
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add Habayib_Majlis_Expenses_2026.xlsx
+          if git diff --staged --quiet; then
+            echo "No changes — file already up to date"
+          else
+            git commit -m "تحديث الملف من Google Drive — $(date '+%Y-%m-%d %H:%M UTC')"
+            git push
+            echo "Done!"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
