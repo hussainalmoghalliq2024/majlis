@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مجلس الحبايب - لوحة المتابعة</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--surface2:#1e2530;--border:#2a3441;--gold:#c9a84c;--gold-dim:#8a6f2e;--gold-glow:rgba(201,168,76,.15);--green:#2ea44f;--green-bg:rgba(46,164,79,.12);--red:#f85149;--red-bg:rgba(248,81,73,.12);--text:#e6edf3;--muted:#7d8590;--teal:#39c5cf;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a1506 100%);border-bottom:1px solid var(--gold-dim);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:16px;flex-wrap:wrap;}
+.header-title{display:flex;align-items:center;gap:16px;}
+.logo-icon{width:52px;height:52px;background:radial-gradient(circle at 30% 30%,var(--gold),var(--gold-dim));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 20px var(--gold-glow);flex-shrink:0;}
+.header h1{font-size:24px;font-weight:900;color:var(--gold);line-height:1.1;}
+.header .subtitle{font-size:11px;color:var(--muted);margin-top:2px;}
+#file-time-msg{font-size:10px;color:var(--muted);margin-top:3px;}
+#file-time-msg b{color:var(--gold);}
+.header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.balance-badge{background:var(--green-bg);border:1px solid var(--green);border-radius:12px;padding:10px 20px;text-align:center;}
+.balance-badge .label{font-size:11px;color:var(--muted);}
+.balance-badge .amount{font-size:22px;font-weight:700;color:var(--green);direction:ltr;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.sync-btn{font-family:'Tajawal',sans-serif;background:var(--gold-glow);border:1px solid var(--gold-dim);color:var(--gold);font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .2s;}
+.sync-btn:hover{background:rgba(201,168,76,.25);}
+.sync-btn.spinning svg{animation:spin .8s linear infinite;}
+.tabs{display:flex;gap:4px;padding:16px 32px 0;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+.tab{padding:10px 22px;border-radius:8px 8px 0 0;border:1px solid transparent;border-bottom:none;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--muted);background:transparent;transition:all .2s;white-space:nowrap;}
+.tab:hover{color:var(--text);background:var(--surface2);}
+.tab.active{background:var(--bg);color:var(--gold);border-color:var(--border);border-bottom-color:var(--bg);margin-bottom:-1px;}
+.main{padding:28px 32px;max-width:1200px;margin:0 auto;}
+.panel{display:none;}.panel.active{display:block;}
+#status-banner{font-size:12px;font-weight:600;padding:12px 16px;border-radius:8px;margin-bottom:20px;display:none;line-height:1.6;}
+#status-banner.loading{background:rgba(201,168,76,.1);border:1px solid var(--gold-dim);color:var(--gold);display:block;}
+#status-banner.success{background:var(--green-bg);border:1px solid var(--green);color:var(--green);display:block;}
+#status-banner.error{background:var(--red-bg);border:1px solid var(--red);color:var(--red);display:block;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.card .card-label{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.card .card-value{font-size:24px;font-weight:700;color:var(--text);direction:ltr;}
+.card .card-value.gold{color:var(--gold);}.card .card-value.green{color:var(--green);}
+.card .card-value.red{color:var(--red);}.card .card-value.teal{color:var(--teal);}
+.lookup-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:28px;}
+.lookup-box h3{font-size:15px;font-weight:700;color:var(--gold);margin-bottom:16px;}
+.lookup-row{display:flex;gap:12px;flex-wrap:wrap;}
+select,.filter-btn{font-family:'Tajawal',sans-serif;font-size:14px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;cursor:pointer;}
+select{flex:1;min-width:180px;}select:focus{outline:1px solid var(--gold);border-color:var(--gold);}
+.filter-btn{background:var(--gold-glow);border-color:var(--gold-dim);color:var(--gold);font-weight:600;padding:10px 20px;transition:background .2s;}
+.filter-btn:hover{background:rgba(201,168,76,.25);}
+.member-result{margin-top:20px;display:none;}.member-result.show{display:block;}
+.member-name-banner{font-size:18px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.months-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
+.month-card{border-radius:10px;padding:12px 14px;border:1px solid;text-align:center;}
+.month-card.paid{background:var(--green-bg);border-color:var(--green);}
+.month-card.unpaid{background:var(--red-bg);border-color:var(--red);}
+.month-card .m-name{font-size:13px;font-weight:600;}
+.month-card.paid .m-name{color:var(--green);}.month-card.unpaid .m-name{color:var(--red);}
+.month-card .m-amount{font-size:18px;font-weight:700;margin:4px 0;direction:ltr;}
+.month-card.paid .m-amount{color:var(--text);}.month-card.unpaid .m-amount{color:var(--muted);}
+.month-card .m-status{font-size:11px;}
+.month-card.paid .m-status{color:var(--green);}.month-card.unpaid .m-status{color:var(--red);}
+.section-title{font-size:16px;font-weight:700;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:580px;}
+thead{background:var(--surface2);}
+th{padding:12px 16px;font-size:12px;font-weight:600;color:var(--muted);text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:11px 16px;font-size:14px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}tbody tr:hover{background:rgba(255,255,255,.025);}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;}
+.badge.paid{background:var(--green-bg);color:var(--green);border:1px solid var(--green);}
+.badge.unpaid{background:var(--red-bg);color:var(--red);border:1px solid var(--red);}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.pill{font-family:'Tajawal',sans-serif;font-size:13px;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;}
+.pill:hover,.pill.active{border-color:var(--gold-dim);background:var(--gold-glow);color:var(--gold);}
+.amount-in{color:var(--green);font-weight:600;}.amount-out{color:var(--red);}
+.running-balance{font-size:12px;color:var(--muted);}
+.progress-wrap{margin-top:6px;}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));border-radius:3px;transition:width .6s ease;}
+.month-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:28px;}
+.month-summary-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.month-summary-card h4{font-size:13px;color:var(--muted);margin-bottom:10px;}
+.month-summary-card .ms-amount{font-size:20px;font-weight:700;color:var(--text);direction:ltr;margin-bottom:8px;}
+.ms-meta{font-size:12px;color:var(--muted);}
+@media(max-width:640px){.header{padding:16px;}.header h1{font-size:20px;}.tabs{padding:12px 16px 0;}.main{padding:20px 16px;}.balance-badge .amount{font-size:18px;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">
+    <div class="logo-icon">☕</div>
+    <div>
+      <h1>مجلس الحبايب</h1>
+      <div class="subtitle">لوحة متابعة الاشتراكات والمصروفات</div>
+      <div id="file-time-msg">جاري التحقق من GitHub...</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="balance-badge">
+      <div class="label">الرصيد المتاح</div>
+      <div class="amount" id="header-balance">—</div>
+    </div>
+    <button class="sync-btn" id="sync-btn">
+      <svg id="sync-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+      </svg>
+      مزامنة من GitHub
+    </button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="btn-tab-member">🔍 وضع العضو</button>
+  <button class="tab" id="btn-tab-payments">📋 كل الاشتراكات</button>
+  <button class="tab" id="btn-tab-expenses">💰 المصروفات</button>
+</div>
+
+<div class="main">
+  <div id="status-banner"></div>
+
+  <div id="tab-member" class="panel active">
+    <div class="cards" id="summary-cards"></div>
+    <div class="lookup-box">
+      <h3>🔍 تحقق من وضع عضو</h3>
+      <div class="lookup-row">
+        <select id="member-select"><option value="">— اختر اسمك —</option></select>
+        <button class="filter-btn" id="show-member-btn">عرض</button>
+      </div>
+      <div class="member-result" id="member-result">
+        <div class="member-name-banner" id="member-banner"></div>
+        <div class="months-grid" id="member-months"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-payments" class="panel">
+    <div class="section-title">📋 جدول الاشتراكات الشهرية</div>
+    <div class="pills" id="month-pills"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الشهر</th><th>الرقم</th><th>اسم المشارك</th><th>المبلغ (ر.س)</th><th>الحالة</th><th>تاريخ الدفع</th></tr></thead>
+        <tbody id="payments-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-expenses" class="panel">
+    <div class="cards" id="expense-cards"></div>
+    <div class="month-summary-grid" id="month-summary-grid"></div>
+    <div class="section-title">💸 تفاصيل المصروفات</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الوصف</th><th>النوع</th><th>المبلغ (ر.س)</th><th>الرصيد بعد العملية</th></tr></thead>
+        <tbody id="expenses-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+const GITHUB_RAW = 'https://raw.githubusercontent.com/hussainalmoghalliq2024/majlis/main/Habayib_Majlis_Expenses_2026.xlsx';
+const GITHUB_API = 'https://api.github.com/repos/hussainalmoghalliq2024/majlis/commits?path=Habayib_Majlis_Expenses_2026.xlsx&per_page=1';
+const CACHE_KEY  = 'majlis_v4';
+
+// Arabic month names keyed by (year*100 + month1based)
+// e.g. 2026*100+1 = 202601 → يناير
+const MONTH_LABEL = {
+  202601:'يناير',202602:'فبراير',202603:'مارس',202604:'أبريل',
+  202605:'مايو', 202606:'يونيو', 202607:'يوليو',202608:'أغسطس',
+  202609:'سبتمبر',202610:'أكتوبر',202611:'نوفمبر',202612:'ديسمبر'
+};
+// Ordered list of month keys
+const MONTH_ORDER = Object.keys(MONTH_LABEL).map(Number).sort();
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let payments=[], expenses=[], members=[];
+
+// ═══════════════════════════════════════════════════
+// DATE HELPERS
+// SheetJS returns dates as JS Date objects when cellDates:true,
+// but we use cellDates:false and get raw numbers or strings.
+// We handle both cases here.
+// ═══════════════════════════════════════════════════
+const DIM=[31,28,31,30,31,30,31,31,30,31,30,31];
+function leap(y){return(y%4===0&&y%100!==0)||y%400===0;}
+
+// Convert Excel serial (number) → {y, m1 (1-based), d}
+function serialToParts(n){
+  n=Math.floor(n);
+  if(n<1)return null;
+  let d=n;
+  if(d===60)return{y:1900,m1:2,d:29};
+  if(d>60)d--;
+  let y=1900;
+  for(;;){const t=leap(y)?366:365;if(d<=t)break;d-=t;y++;}
+  let m=0;
+  for(;;){const t=(m===1&&leap(y))?29:DIM[m];if(d<=t)break;d-=t;m++;}
+  return{y,m1:m+1,d};
+}
+
+// Convert any raw cell value from date column → {y, m1, d} or null
+function cellToDateParts(raw){
+  if(raw===null||raw===undefined||raw==='')return null;
+  if(typeof raw==='number'&&raw>0) return serialToParts(raw);
+  if(typeof raw==='string'){
+    // try M/D/YYYY or YYYY-MM-DD
+    let m=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(m)return{y:+m[3],m1:+m[1],d:+m[2]};
+    m=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m)return{y:+m[1],m1:+m[2],d:+m[3]};
+  }
+  return null;
+}
+
+function partsToAr(p){
+  if(!p)return'—';
+  const names=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  return p.d+' '+names[p.m1-1]+' '+p.y;
+}
+
+function partsToMonthKey(p){
+  if(!p)return null;
+  const k=p.y*100+p.m1;
+  return MONTH_LABEL[k]!==undefined?k:null;
+}
+
+// ═══════════════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════════════
+function setStatus(msg,type){const el=document.getElementById('status-banner');el.innerHTML=msg;el.className=type;}
+
+// ═══════════════════════════════════════════════════
+// WORKBOOK PARSER
+// Exact column layout (from inspecting the file):
+//   Individual_Payments  row4=header, header row has 4 blank rows above
+//     col0=الشهر  col1=عدد المشاركين(No)  col2=اسم المشارك  col3=المبلغ  col4=تم الدفع؟  col5=تاريخ الدفع
+//   General_Expenses  row3=header
+//     col0=التاريخ  col1=وصف المصروفات  col2=المبلغ
+// ═══════════════════════════════════════════════════
+function parseWorkbook(wb){
+  payments=[]; expenses=[];
+
+  // ── Individual_Payments ──────────────────────────
+  const wsP = wb.Sheets['Individual_Payments'];
+  if(wsP){
+    // Use sheet_to_json with header:1 to get raw arrays, cellDates:false already set
+    const rows = XLSX.utils.sheet_to_json(wsP, {header:1, defval:null});
+    // Find header row: the row containing 'اسم المشارك'
+    let hi = rows.findIndex(r => r && r.some(c => String(c||'').includes('اسم المشارك')));
+    if(hi < 0) hi = 4; // fallback
+    // Header: col0=الشهر, col1=عدد المشاركين, col2=اسم المشارك, col3=المبلغ, col4=تم الدفع؟, col5=تاريخ الدفع
+    for(let i = hi+1; i < rows.length; i++){
+      const row = rows[i];
+      if(!row) continue;
+      const rawName   = row[2]; // اسم المشارك — col index 2
+      const rawAmount = row[3]; // المبلغ
+      const rawPaid   = row[4]; // تم الدفع؟
+      const rawDate   = row[5]; // تاريخ الدفع
+      const rawMonth  = row[0]; // الشهر (Excel serial number)
+      const rawNo     = row[1]; // عدد المشاركين (1-10)
+
+      const name = String(rawName||'').trim();
+      if(!name) continue;
+
+      // Amount: must be a real number (skip formula strings like '=-8.5-25')
+      const amount = (typeof rawAmount==='number') ? rawAmount : 0;
+
+      // Paid status
+      const paidStr = String(rawPaid||'').trim();
+      const paid = paidStr === 'تم الدفع';
+
+      // Month key: raw is an Excel serial number (number type)
+      let monthKey = null;
+      if(typeof rawMonth === 'number' && rawMonth > 0){
+        const p = serialToParts(rawMonth);
+        if(p) monthKey = partsToMonthKey(p);
+      }
+      if(!monthKey) continue; // skip rows with no valid month
+
+      // Payment date
+      let dateParts = null;
+      if(typeof rawDate === 'number' && rawDate > 0){
+        dateParts = serialToParts(rawDate);
+      } else if(typeof rawDate === 'string'){
+        dateParts = cellToDateParts(rawDate);
+      }
+
+      payments.push({
+        monthKey,
+        no: typeof rawNo==='number' ? rawNo : 0,
+        name,
+        amount: paid ? amount : 0,
+        paid,
+        dateParts
+      });
+    }
+  }
+
+  // ── General_Expenses ─────────────────────────────
+  const wsE = wb.Sheets['General_Expenses'];
+  if(wsE){
+    const rows = XLSX.utils.sheet_to_json(wsE, {header:1, defval:null});
+    // Header row contains 'وصف المصروفات'
+    let hi = rows.findIndex(r => r && r.some(c => String(c||'').includes('وصف')));
+    if(hi < 0) hi = 3;
+    for(let i = hi+1; i < rows.length; i++){
+      const row = rows[i];
+      if(!row) continue;
+      // col1=وصف المصروفات, col2=المبلغ
+      const desc   = String(row[1]||'').trim();
+      // Amount MUST be a real number — skip formula strings
+      const amount = (typeof row[2]==='number') ? row[2] : null;
+      if(!desc || amount===null) continue;
+      if(/إجمالي|مجموع|مبلغ العزبة المتاح/i.test(desc)) continue;
+      expenses.push({desc, amount});
+    }
+  }
+
+  members = [...new Set(payments.map(p=>p.name))].sort();
+}
+
+// ═══════════════════════════════════════════════════
+// GITHUB FETCH
+// ═══════════════════════════════════════════════════
+async function fetchLastCommit(){
+  const el=document.getElementById('file-time-msg');
+  try{
+    const r=await fetch(GITHUB_API);
+    if(r.ok){
+      const c=await r.json();
+      if(c&&c.length>0){
+        const d=new Date(c[0].commit.committer.date);
+        el.innerHTML='آخر تحديث GitHub: <b>'+
+          d.toLocaleString('ar-SA',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})+'</b>';
+      }
+    }
+  }catch(e){el.textContent='المصدر: GitHub (majlis)';}
+}
+
+async function fetchDataFromGitHub(){
+  const btn=document.getElementById('sync-btn');
+  btn.classList.add('spinning');
+  setStatus('⏳ جاري تحميل الملف من GitHub...','loading');
+  fetchLastCommit();
+  try{
+    const res=await fetch(GITHUB_RAW);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const buf=await res.arrayBuffer();
+    // cellDates:false → dates stay as Excel serial numbers (plain numbers)
+    const wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:false});
+    parseWorkbook(wb);
+    if(!payments.length && !expenses.length)
+      throw new Error('تم تحميل الملف لكن لم تُقرأ بيانات — تحقق من الكونسول');
+    localStorage.setItem(CACHE_KEY,JSON.stringify({payments,expenses}));
+    renderAll();
+    setStatus('✓ تم التحميل — '+payments.length+' دفعة | '+expenses.length+' مصروف — '+new Date().toLocaleTimeString('ar-SA'),'success');
+  }catch(err){
+    console.error(err);
+    setStatus('❌ '+err.message,'error');
+    const cached=localStorage.getItem(CACHE_KEY);
+    if(cached){
+      try{
+        const d=JSON.parse(cached);
+        payments=d.payments||[]; expenses=d.expenses||[];
+        members=[...new Set(payments.map(p=>p.name))].sort();
+        renderAll();
+      }catch(e){}
+    }
+  }finally{btn.classList.remove('spinning');}
+}
+
+// ═══════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════
+['member','payments','expenses'].forEach(id=>{
+  document.getElementById('btn-tab-'+id).addEventListener('click',function(){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-'+id).classList.add('active');
+    this.classList.add('active');
+  });
+});
+document.getElementById('sync-btn').addEventListener('click',fetchDataFromGitHub);
+document.getElementById('show-member-btn').addEventListener('click',showMember);
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function getBalance(){return expenses.reduce((s,e)=>s+e.amount,0);}
+
+function renderHeaderBalance(){
+  document.getElementById('header-balance').textContent=
+    getBalance().toLocaleString('ar',{minimumFractionDigits:2})+' ر.س';
+}
+
+function renderSummaryCards(){
+  const tc=payments.filter(p=>p.paid).reduce((s,p)=>s+p.amount,0);
+  const te=expenses.filter(e=>e.amount<0).reduce((s,e)=>s+Math.abs(e.amount),0);
+  const b=getBalance();
+  const pc=payments.filter(p=>p.paid).length;
+  const ts=payments.length;
+  const pct=ts>0?Math.round(pc/ts*100):0;
+  document.getElementById('summary-cards').innerHTML=`
+    <div class="card">
+      <div class="card-label">إجمالي المحصّل</div>
+      <div class="card-value gold">${tc.toLocaleString('ar')} ر.س</div>
+      <div class="progress-wrap">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${pc} من ${ts} دفعة (${pct}%)</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-label">إجمالي المصروفات</div><div class="card-value red">${te.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</div></div>
+    <div class="card"><div class="card-label">الرصيد المتاح</div><div class="card-value green">${b.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</div></div>
+    <div class="card"><div class="card-label">عدد الأعضاء</div><div class="card-value teal">${members.length}</div></div>`;
+}
+
+function renderMemberSelect(){
+  const sel=document.getElementById('member-select');
+  sel.innerHTML='<option value="">— اختر اسمك —</option>';
+  members.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+}
+
+function showMember(){
+  const name=document.getElementById('member-select').value; if(!name)return;
+  const mp=[];
+  for(const mk of MONTH_ORDER){
+    const f=payments.find(p=>p.name===name&&p.monthKey===mk);
+    if(f) mp.push(f);
+    else if(payments.some(p=>p.monthKey===mk)) mp.push({monthKey:mk,no:0,name,amount:0,paid:false,dateParts:null});
+  }
+  const tp=mp.filter(p=>p.paid).reduce((s,p)=>s+p.amount,0);
+  const pe=mp.filter(p=>!p.paid).length;
+  document.getElementById('member-banner').innerHTML=
+    `<span>${name}</span><span class="badge paid" style="font-size:13px">دفع ${tp} ر.س</span>`+
+    (pe>0?`<span class="badge unpaid">${pe} شهر متأخر</span>`:'');
+  document.getElementById('member-months').innerHTML=mp.map(p=>{
+    const mn=MONTH_LABEL[p.monthKey]||p.monthKey;
+    const ds=p.paid&&p.dateParts?partsToAr(p.dateParts):'';
+    return`<div class="month-card ${p.paid?'paid':'unpaid'}">
+      <div class="m-name">${mn}</div>
+      <div class="m-amount">${p.paid?p.amount+' ر.س':'—'}</div>
+      <div class="m-status">${p.paid?'✓ تم الدفع':'✗ لم يتم الدفع'}</div>
+      ${ds?`<div style="font-size:10px;color:var(--muted);margin-top:5px">${ds}</div>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('member-result').classList.add('show');
+}
+
+function renderPaymentsTable(filter){
+  const data=filter==='all'?payments:payments.filter(p=>p.monthKey==filter);
+  document.getElementById('payments-tbody').innerHTML=data.map(p=>{
+    const mn=MONTH_LABEL[p.monthKey]||p.monthKey;
+    const ds=p.paid&&p.dateParts?partsToAr(p.dateParts):'—';
+    const badge=p.paid?'<span class="badge paid">✓ تم الدفع</span>':'<span class="badge unpaid">✗ لم يتم الدفع</span>';
+    return`<tr><td>${mn}</td><td style="color:var(--muted)">${p.no}</td><td>${p.name}</td>
+      <td style="direction:ltr;text-align:right">${p.paid?p.amount+' ر.س':'—'}</td>
+      <td>${badge}</td><td style="font-size:12px;color:var(--muted)">${ds}</td></tr>`;
+  }).join('');
+}
+
+function renderMonthPills(){
+  const activeMos=[...new Set(payments.map(p=>p.monthKey))].sort((a,b)=>a-b);
+  document.getElementById('month-pills').innerHTML=
+    `<button class="pill active" id="pill-all">الكل</button>`+
+    activeMos.map(m=>`<button class="pill" id="pill-${m}">${MONTH_LABEL[m]||m}</button>`).join('');
+  document.getElementById('pill-all').addEventListener('click',function(){
+    document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+    this.classList.add('active'); renderPaymentsTable('all');
+  });
+  activeMos.forEach(m=>{
+    const b=document.getElementById('pill-'+m);
+    if(b)b.addEventListener('click',function(){
+      document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+      this.classList.add('active'); renderPaymentsTable(m);
+    });
+  });
+}
+
+function renderExpenses(){
+  const ti=expenses.filter(e=>e.amount>0).reduce((s,e)=>s+e.amount,0);
+  const to=expenses.filter(e=>e.amount<0).reduce((s,e)=>s+Math.abs(e.amount),0);
+  const b=getBalance();
+  document.getElementById('expense-cards').innerHTML=`
+    <div class="card"><div class="card-label">إجمالي الوارد (عزبة)</div><div class="card-value green">${ti.toLocaleString('ar')} ر.س</div></div>
+    <div class="card"><div class="card-label">إجمالي الصادر (مصروفات)</div><div class="card-value red">${to.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</div></div>
+    <div class="card"><div class="card-label">الرصيد الحالي</div><div class="card-value gold">${b.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</div></div>`;
+  // Monthly collections
+  const cbm={};
+  for(const mk of MONTH_ORDER){
+    const v=payments.filter(p=>p.monthKey===mk&&p.paid).reduce((s,p)=>s+p.amount,0);
+    if(v>0)cbm[MONTH_LABEL[mk]]=v;
+  }
+  document.getElementById('month-summary-grid').innerHTML=Object.entries(cbm).map(([mo,v])=>
+    `<div class="month-summary-card"><h4>${mo}</h4><div class="ms-amount">${v} ر.س</div><div class="ms-meta">محصّل من الأعضاء</div></div>`).join('');
+  // Expenses table
+  let running=0;
+  document.getElementById('expenses-tbody').innerHTML=expenses.map(e=>{
+    running+=e.amount;
+    const isIn=e.amount>0;
+    const badge=isIn?'<span class="badge paid">وارد</span>':'<span class="badge unpaid">مصروف</span>';
+    const amt=isIn?`<span class="amount-in">+${e.amount.toLocaleString('ar',{minimumFractionDigits:2})}</span>`
+                  :`<span class="amount-out">${e.amount.toLocaleString('ar',{minimumFractionDigits:2})}</span>`;
+    return`<tr class="expense-row"><td>${e.desc}</td><td>${badge}</td><td>${amt}</td>
+      <td><span class="running-balance">${running.toLocaleString('ar',{minimumFractionDigits:2})} ر.س</span></td></tr>`;
+  }).join('');
+}
+
+function renderAll(){
+  renderHeaderBalance(); renderSummaryCards(); renderMemberSelect();
+  renderMonthPills(); renderPaymentsTable('all'); renderExpenses();
+}
+
+window.onload = fetchDataFromGitHub;
+<\/script>
+</body>
+</html>
